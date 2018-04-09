@@ -95,8 +95,7 @@ static int cleanup_client(struct client *client, int num, fd_set *keep) {
   char tmpbuf[30];
 
   /* 課題6 */
-  // -
-  // 終了したクライアントのソケットをfd_set型変数からクリアする(FD_CLR()を呼ぶ)
+  // - 終了したクライアントのソケットをfd_set型変数からクリアする(FD_CLR()を呼ぶ)
   FD_CLR(client[num].sock, &keep);
 
   // - 終了したクライアントのsockを閉じてクリアする
