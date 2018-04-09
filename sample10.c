@@ -13,7 +13,7 @@ main (int argc, char *argv[])
     while ((c = getopt (argc, argv, "p:s:h")) != -1) {
 	switch (c) {
 	    case 'p' :
-		/* 一度数値に変換して妥当かどうか調べてみる */
+    /* 一度数値に変換して妥当かどうか調べてみる */
 		portNo = atoi (optarg);
 		if (portNo == 0) {
 		    fprintf (stderr, "Port No. must be integer!\n");
