@@ -95,7 +95,8 @@ static int cleanup_client(struct client *client, int num, fd_set *keep) {
   char tmpbuf[30];
 
   /* 課題6 */
-  // - 終了したクライアントのソケットをfd_set型変数からクリアする(FD_CLR()を呼ぶ)
+  // -
+  // 終了したクライアントのソケットをfd_set型変数からクリアする(FD_CLR()を呼ぶ)
   FD_CLR(client[num].sock, &keep);
 
   // - 終了したクライアントのsockを閉じてクリアする
@@ -114,10 +115,19 @@ static int cleanup_client(struct client *client, int num, fd_set *keep) {
 }
 
 static int accept_client(struct client *client, int wait_sock, fd_set *keep) {
-  int i;
+  int i, num;
   char message[] = "Please register your name : ";
 
   /* 課題7 */
+  // 受付可能なクライント・ソケットを見つける
+  // 受付可能ならaccept()し、fd_set(=rfd_keep)にソケット・ディスクリプタをセット
+  // 受け付けたくアイアントに名前の入力を要求する
+  for (i = 0; i < MAX_CLIENTS && client[i].sock != -1; i++);
+  if (i < MAX_CLIENTS) {
+    client[i].sock = accept(wait_sock, NULL, NULL);
+    FD_SET(client[i].sock, &keep);
+    send_n(client[i].sock, message, strlen(message));
+  }
 
   return 0;
 }
