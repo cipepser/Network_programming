@@ -119,9 +119,9 @@ static int accept_client(struct client *client, int wait_sock, fd_set *keep) {
   char message[] = "Please register your name : ";
 
   /* 課題7 */
-  // 受付可能なクライント・ソケットを見つける
+  // 受付可能なクライアント・ソケットを見つける
   // 受付可能ならaccept()し、fd_set(=rfd_keep)にソケット・ディスクリプタをセット
-  // 受け付けたくアイアントに名前の入力を要求する
+  // 受け付けたくクライアントに名前の入力を要求する
   for (i = 0; i < MAX_CLIENTS && client[i].sock != -1; i++);
   if (i < MAX_CLIENTS) {
     client[i].sock = accept(wait_sock, NULL, NULL);
