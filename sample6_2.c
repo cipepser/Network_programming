@@ -62,7 +62,7 @@ int main (int argc, char *argv[]) {
 					cli_sock[i] = accept(wait_sock, NULL, NULL);
 					FD_SET(cli_sock[i], &rfd_keep);
 					
-					fprintf(stderr, "Client[%d] accepted.\n", i);
+					fprintf(stderr, "Client[%d] accepted.\r\n", i);
 				}
 				
 				// イベントが残っていない場合は次のループへ
@@ -85,7 +85,7 @@ int main (int argc, char *argv[]) {
 						FD_CLR(cli_sock[i], &rfd_keep);
 						cli_sock[i] = -1;
 						
-						fprintf(stderr, "Client[%d] closed.\n", i);
+						fprintf(stderr, "Client[%d] closed.\r\n", i);
 					}
 					// イベントが残っていない場合は次のループへ
 					if(--numfd <= 0){
