@@ -68,8 +68,8 @@ int main(int argc, char *argv[]) {
     rfd = rfd_keep;
     if (select(maxfd, &rfd, NULL, NULL, NULL) > 0) {
       if (FD_ISSET(sock, &rfd)) {
+        memset(recv_buf, 0, sizeof(recv_buf));
         if (recv(sock, recv_buf, sizeof(recv_buf), 0) == 0) {
-					memset(recv_buf, 0, sizeof(recv_buf));
           if (end_of_input == 1)
             break;
           else {
