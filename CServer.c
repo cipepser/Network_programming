@@ -1,9 +1,16 @@
-#include "mysock.h"
+#include "mysocklib/mysock.h"
 #include <stdio.h>
 #include <string.h>
+#include <sys/select.h>
+// #include <sys/socket.h>
+// #include <sys/types.h>
+#include <unistd.h>
+// #include <netdb.h>
+// #include <arpa/inet.h>
+#include <ctype.h>
 
 /* 定数の定義 */
-static const char *port = "10010";
+static const char *port = "10007";
 #define MAX_CLIENTS 5
 #define MAX_BUFSIZE 1024
 #define MAX_NAMELEN 16
@@ -23,7 +30,7 @@ static int accept_client(struct client *client, int wait_sock, fd_set *keep);
 static int handle_client(struct client *client, int cur);
 
 int main(int argc, char *argv[]) {
-  int wait_sock, numfd, i;
+  int wait_sock, numfd, i, len;
   struct client client[MAX_CLIENTS];
   fd_set rfd, rfd_keep;
 
@@ -32,10 +39,11 @@ int main(int argc, char *argv[]) {
 
   FD_ZERO(&rfd_keep);
   FD_SET(wait_sock, &rfd_keep);
-
+    
   while (1) {
     rfd = rfd_keep;
 
+    // printf("%d\n", rfd);
     if ((numfd = select(FD_SETSIZE, &rfd, NULL, NULL, NULL)) > 0) {
       if (FD_ISSET(wait_sock, &rfd)) {
         accept_client(client, wait_sock, &rfd_keep);
@@ -45,11 +53,14 @@ int main(int argc, char *argv[]) {
 
       for (i = 0; i < MAX_CLIENTS; i++) {
         if (client[i].sock > 0 && FD_ISSET(client[i].sock, &rfd)) {
-          handle_client(client, i);
+          len = handle_client(client, i);
+          if (len > 0)
+            cleanup_client(client, i, &rfd_keep);
           if (--numfd == 0)
             break;
         }
       }
+      
     }
   }
 }
@@ -97,7 +108,7 @@ static int cleanup_client(struct client *client, int num, fd_set *keep) {
   /* 課題6 */
   // -
   // 終了したクライアントのソケットをfd_set型変数からクリアする(FD_CLR()を呼ぶ)
-  FD_CLR(client[num].sock, &keep);
+  FD_CLR(client[num].sock, keep);
 
   // - 終了したクライアントのsockを閉じてクリアする
   close(client[num].sock);
@@ -122,10 +133,11 @@ static int accept_client(struct client *client, int wait_sock, fd_set *keep) {
   // 受付可能なクライアント・ソケットを見つける
   // 受付可能ならaccept()し、fd_set(=rfd_keep)にソケット・ディスクリプタをセット
   // 受け付けたくクライアントに名前の入力を要求する
-  for (i = 0; i < MAX_CLIENTS && client[i].sock != -1; i++);
+  for (i = 0; i < MAX_CLIENTS && client[i].sock != -1; i++)
+    ;
   if (i < MAX_CLIENTS) {
     client[i].sock = accept(wait_sock, NULL, NULL);
-    FD_SET(client[i].sock, &keep);
+    FD_SET(client[i].sock, keep);
     send_n(client[i].sock, message, strlen(message));
   }
 
@@ -135,11 +147,23 @@ static int accept_client(struct client *client, int wait_sock, fd_set *keep) {
 static int handle_client(struct client *client, int cur) {
   int i;
   ssize_t len;
-  char recv_buf[MAX_BUFSIZE - MAX_NAMELEN - 4], send_buf[MAX_BUFSIZE];
+  char recv_buf[MAX_BUFSIZE - MAX_NAMELEN - 4], send_buf[MAX_BUFSIZE],
+      name[MAX_NAMELEN], message[] = "Please register your name : ";
 
   if ((len = recv_line(client[cur].sock, recv_buf, sizeof(recv_buf))) > 0) {
-
-    /* 課題 8 */
+    /* 課題 9 */
+    if (client[cur].name != 0) {
+      snprintf(send_buf, sizeof(send_buf), "%s : %s", client[cur].name,
+               recv_buf);
+      for (i = 0; i < MAX_CLIENTS; i++)
+        if (client[i].sock > 0) /* 接続しているソケットにのみ送信 */
+          send_n(client[i].sock, send_buf, strlen(send_buf));
+    } else {
+      send_n(client[cur].sock, message, strlen(message));
+      if (recv_line(client[cur].sock, name, sizeof(name)) > 0) {
+        register_client(client, cur, name);
+      }
+    }
   }
 
   return len;
